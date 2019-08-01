@@ -1,8 +1,8 @@
 <?php
-class ChatHandler {
-    protected $auth = false;
+class XAS_ChatHandler {
     protected $name, $pass;
-    private $html, $inputs;
+    protected $auth = false;
+    private $html, $inputs, $headers;
     /* SETTINGS */
     const NOT_STAFF  = ['guest']; # You can use: member, mod, owner, main
     const BLACK_LIST = [10101, 1510151, 23232323, 356566558]; # Black list, you can ignore bots or someone else
@@ -10,7 +10,6 @@ class ChatHandler {
     const PHRASES    = [
         'Invalid password.',
         'You need MANAGE power enabled.',
-        'Page not found, you can use 0-5.',
     ];
     const XAT_IDS = [
         7   => 'Darren',
@@ -26,7 +25,6 @@ class ChatHandler {
         'xs'   => 'https://xat.me/web_gear/chat/profile.php?id=%d',
         'edit' => 'https://xat.com/web_gear/chat.php?id=%d&pw=%d',
         'chat' => 'https://xat.com/web_gear/chat/editgroup.php?GroupName=%s',
-        'eip'  => 'https://xat.com/web_gear/chat/eip.php?id=%d&pw=%d&md=4&back=%s&t=%s',
     ];
     /*-*-*-*-*-*/
 
@@ -34,6 +32,10 @@ class ChatHandler {
         try {
             $this->name = $name;
             $this->pass = $pass;
+            $this->headers = [
+                'Referer'    => sprintf(self::URL['chat'], $this->name),
+                'User-Agent' => 'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0',
+            ];
             $this->html = $this->getInitData();
             $this->loadInputs();
         } catch (Exception $e) {
@@ -70,90 +72,14 @@ class ChatHandler {
         return $staffList;
     }
 
-    public function setOuter(string $bg) {
-        $this->inputs['back'] = $bg;
-        $this->saveChanges();
-        return true;
-    }
-
-    public function setInner(string $bg) {
-        $reqData = $this->requests(sprintf(self::URL['edit'], intval($this->inputs['id']), intval($this->inputs['pw'])));
-        preg_match('/<input name="background" type="hidden" value="(.*?);=(.*?)">/is', $reqData, $getData);
-        $newData = sprintf('%s;=%s', $bg, $getData[2]);
-        $this->requests(sprintf(self::URL['eip'], intval($this->inputs['id']), intval($this->inputs['pw']), $newData, time()));
-        return true;
-    }
-
-    public function setTransparent(bool $mode) {
-        if ($mode) {
-            $this->inputs['Transparent'] = 'ON';
-        } else {
-            unset($this->inputs['Transparent']);
-        }
-        $this->saveChanges();
-        return true;
-    }
-
-    public function setComments(bool $mode) {
-        if ($mode) {
-            $this->inputs['Comments'] = 'ON';
-        } else {
-            unset($this->inputs['Comments']);
-        }
-        $this->saveChanges();
-        return true;
-    }
-
-    public function setDescription(string $desc) {
-        $this->inputs['GroupDescription'] = $desc;
-        $this->saveChanges();
-        return true;
-    }
-
-    public function setTags(string $tags) {
-        $this->inputs['GroupDescription'] = $tags;
-        $this->saveChanges();
-        return true;
-    }
-
-    public function setAdsLink(string $url) {
-        $this->inputs['www'] = $url;
-        $this->saveChanges();
-        return true;
-    }
-
-    public function setButtonText(int $number, string $text) {
-        if ($number < 0 || $number > 5){
-            throw new Exception(self::PHRASES[2]);
-        }
-        $input = sprintf("media%d", $number);
-        if (array_key_exists($input, $this->inputs)) {
-            $this->inputs[$input] = $text;
-        }
-        $this->saveChanges();
-    }
-
-    public function setButtonName(int $number, string $title) {
-        if ($number < 0 || $number > 5){
-            throw new Exception(self::PHRASES[2]);
-        }
-        $input = sprintf("button%d", $number);
-        if (array_key_exists($input, $this->inputs)) {
-            $this->inputs[$input] = $title;
-        }
-        $this->saveChanges();
-    }
-
-    public function saveChanges() {
-        $this->inputs['submit1'] = 1;
-        return $this->submit();
-    }
-
     public function submit() {
-        $headers = [
-            'Referer: ' . sprintf(self::URL['chat'], $this->name),
-        ];
-        $getSetup = $this->requests(self::URL['chat'], $this->inputs, $headers);
+        $getSetup = wp_remote_post(
+            self::URL['chat'],
+            [
+                "body"	  => $this->inputs,
+                "headers" => $this->headers,
+            ]
+        )['body'];
         return $getSetup;
     }
 
@@ -162,21 +88,26 @@ class ChatHandler {
         if (array_key_exists($uid, self::XAT_IDS)) {
             return self::XAT_IDS[$uid];
         }
-        $rUsers = file_get_contents(__DIR__ . '/usercache.json');
+        $rUsers = file_get_contents(XAS_CACHE_DIR);
         $users = json_decode($rUsers, true); # not obj
         if (array_key_exists($uid, $users)) {
             if ($users[$uid]['time'] >= time()) {
                 return $users[$uid]['name'];
             }
         } 
-        $getProfile = $this->requests(sprintf(self::URL['xs'], $uid));
+        $getProfile = wp_remote_get(
+            sprintf(self::URL['xs'], $uid),
+            [
+                "headers" => $this->headers,
+            ]
+        )['body'];
         if ($getProfile && strlen($getProfile) < 20) {
             $users[$uid] = [
                 'name' => $getProfile,
                 'time' => intval(time() + self::CACHE_TIME),
             ];
         }
-        file_put_contents(__DIR__ . '/usercache.json', json_encode($users));
+        file_put_contents(XAS_CACHE_DIR, json_encode($users));
         if (array_key_exists($uid, $users)) {
             return $users[$uid]['name'];
         }
@@ -189,7 +120,13 @@ class ChatHandler {
             'password'   => $this->pass, 
             'SubmitPass' => 'Submit',
         ];
-        $getParams = $this->requests(sprintf(self::URL['chat'], $this->name), $params);
+        $getParams = wp_remote_post(
+            sprintf(self::URL['chat'], $this->name),
+            [
+                "body" => $params,
+                "headers" => $this->headers,
+            ]
+        )['body'];
         if (strpos($getParams, '**<span data-localize=buy.wrongpassword>') !== false) {
             throw new Exception(self::PHRASES[0]);
         }
@@ -224,25 +161,5 @@ class ChatHandler {
             }
         }
         return $this->inputs;
-    }
-
-    private function requests($url, $params = array(), $headers = array()) {
-        $opts = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER         => false,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_TIMEOUT        => 3,
-            CURLOPT_MAXREDIRS      => 3,
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_POSTFIELDS     => http_build_query($params),
-            CURLOPT_POST           => (empty($params) ? false : true),
-        ];
-        $ch = curl_init($url);
-        curl_setopt_array($ch, $opts);
-        $result = curl_exec($ch);
-        curl_close($ch);
-        return $result;
     }
 }

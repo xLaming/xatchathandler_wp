@@ -1,27 +1,26 @@
 <?php
-function initStaffList() {
-    $perms = intval(substr(decoct(fileperms(DIRECTORY . '/src/usercache.json')), -3));
-    if ($perms < 666) {
-        return 'You need to set permissions(chmod) READ & WRITE on the file: ' . DIRECTORY . '/src/usercache.json';
-    } else if (empty(get_option('chat_name')) || empty(get_option('chat_pass'))) {
-        return 'You need to setup the chat name and password.';
+function XAS_StaffList() {
+    if (!file_exists(XAS_CACHE_DIR)) {
+        file_put_contents(XAS_CACHE_DIR, '{}');
+    } else if (empty(get_option('xas_chat_name')) || empty(get_option('xas_chat_pass'))) {
+        return 'You need to setup the chat name and password in order to show your staff list.';
     }
-    define('RANKS', [
-        'main'   => get_option('main_title', 'Main Owner'),
-        'owner'  => get_option('owner_title', 'Owner'),
-        'mod'    => get_option('mod_title', 'Moderator'),
-        'member' => get_option('member_title', 'Member'),
+    define('XAS_RANKS', [
+        'main'   => get_option('xas_main_title', 'Main Owner'),
+        'owner'  => get_option('xas_owner_title', 'Owner'),
+        'mod'    => get_option('xas_mod_title', 'Moderator'),
+        'member' => get_option('xas_member_title', 'Member'),
     ]);
-    $excpt = get_option('list_member') == '1' ? true : false;
-    $chat  = new ChatHandler(get_option('chat_name'), get_option('chat_pass'));
+    $excpt = get_option('xas_list_member') == '1' ? true : false;
+    $chat  = new XAS_ChatHandler(get_option('xas_chat_name'), get_option('xas_chat_pass'));
     $list  = $chat->getStaffList($excpt);
     $staff = ['main' => [], 'owner' => [], 'mod' => [],'member' => []]; # Cache var
     $html  = '<table class="table table-responsive">';
     $html .= '<thead>
         <tr>
-            <td>' . get_option('rank_title', 'Rank') . '</td>
-            <td>' . get_option('name_title', 'Name') . '</td>
-            <td>' . get_option('user_title', 'User') . '</td>
+            <td>' . get_option('xas_rank_title', 'Rank') . '</td>
+            <td>' . get_option('xas_name_title', 'Name') . '</td>
+            <td>' . get_option('xas_user_title', 'User') . '</td>
         </tr>
     </thead>
     <tbody>';
@@ -36,7 +35,7 @@ function initStaffList() {
     foreach ($staff as $r => $i) {
         foreach ($i as $u) {
             $html .= '<tr>
-                <td>' . RANKS[$r] . '</td>
+                <td>' . XAS_RANKS[$r] . '</td>
                 <td>' . $u['name'] . '</td>
                 <td><a href="//xat.me/' . $u['user'] . '">' . $u['user'] . ' (' . $u['id'] . ')</a></td>
             </tr>';
