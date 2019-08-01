@@ -5,7 +5,7 @@ function XAS_SettingsMenu() {
         'xat Auto Staff', 
         'administrator', 
         __FILE__, 
-        'XAS_SettingsPage' , 
+        'XAS_SettingsPage'
     );
 	add_action('admin_init', 'XAS_SettingsRegister');
 }
