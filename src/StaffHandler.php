@@ -10,11 +10,12 @@ function XAS_StaffList() {
         'owner'  => get_option('xas_owner_title', 'Owner'),
         'mod'    => get_option('xas_mod_title', 'Moderator'),
         'member' => get_option('xas_member_title', 'Member'),
+        'guest'  => 'NOT USED',
     ]);
     $excpt = get_option('xas_list_member') == '1' ? true : false;
     $chat  = new XAS_ChatHandler(get_option('xas_chat_name'), get_option('xas_chat_pass'));
     $list  = $chat->getStaffList($excpt);
-    $staff = ['main' => [], 'owner' => [], 'mod' => [],'member' => []]; # Cache var
+    $staff = ['main' => [], 'owner' => [], 'mod' => [],'member' => [], 'guest' => []]; # Cache var
     $html  = '<table class="table table-responsive">';
     $html .= '<thead>
         <tr>

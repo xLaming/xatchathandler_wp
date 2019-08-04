@@ -4,7 +4,7 @@ class XAS_ChatHandler {
     protected $auth = false;
     private $html, $inputs, $headers, $languages;
     /* SETTINGS */
-    const NOT_STAFF  = ['guest']; # You can use: member, mod, owner, main
+    const NOT_STAFF  = ['guest']; # You can use: mod, owner, main
     const BLACK_LIST = [10101, 1510151, 23232323, 356566558]; # Black list, you can ignore bots or someone else
     const CACHE_TIME = 86400; # 24 hours in seconds
     const PHRASES    = [
@@ -48,7 +48,7 @@ class XAS_ChatHandler {
         $this->inputs['BackupUsers'] = 1;
         $getParams = $this->submit();
         $staffList = [];
-        $notList = self::NOT_STAFF;
+        $noList = self::NOT_STAFF;
         if (strpos($getParams, '**<span data-localize=edit.manage') !== false) {
             throw new Exception(self::PHRASES[1]);
         } else if (!$listMembers) {
@@ -146,7 +146,7 @@ class XAS_ChatHandler {
         $this->languages = $getLangList[1];
         $currentLangId = array_search(' selected', $getLangList[2]);
         $getLanguage = $this->languages[$currentLangId];
-        $this->inputs['Lang'] = $language;
+        $this->inputs['Lang'] = $getLanguage;
         $this->inputs['media0'] = $getTextarea[2];
         foreach ($getInputs[1] as $i) {
             preg_match_all('/name\="(.*?)"/', $i, $getInput);
