@@ -50,7 +50,7 @@ class XAS_ChatHandler {
         $staffList = [];
         $noList = self::NOT_STAFF;
         if (strpos($getParams, '**<span data-localize=edit.manage') !== false) {
-            throw new Exception(self::PHRASES[1]);
+            return self::PHRASES[1];
         } else if (!$listMembers) {
             $noList[] = 'member';
         }
