@@ -3,7 +3,7 @@
  * Plugin Name: xat Auto Staff
  * Plugin URI: https://github.com/xLaming/xatchathandler_wp
  * Description: List your staff automatically to WordPress.
- * Version: 1.1
+ * Version: 1.2
  * Author: xLaming
  * Author URI: xat.me/PAULO
  * License: MIT
