@@ -2,7 +2,7 @@
 class XAS_ChatHandler {
     protected $name, $pass;
     protected $auth = false;
-    private $html, $inputs, $headers;
+    private $html, $inputs, $headers, $languages;
     /* SETTINGS */
     const NOT_STAFF  = ['guest']; # You can use: member, mod, owner, main
     const BLACK_LIST = [10101, 1510151, 23232323, 356566558]; # Black list, you can ignore bots or someone else
@@ -141,6 +141,12 @@ class XAS_ChatHandler {
         $this->html = str_replace('\r\n', '', $this->html); # fixed
         preg_match_all('/<input(.*?)>/is', $this->html, $getInputs);
         preg_match('/<textarea id="media0"(.*?)>(.*?)<\/textarea>/is', $this->html, $getTextarea);
+        preg_match('/<select name="Lang">(.*?)<\/select>/is', $this->html, $getLang);
+        preg_match_all('/<option value="([\w]+)"(.*?)>(.*?)<\/option>/is', $getLang[0], $getLangList);
+        $this->languages = $getLangList[1];
+        $currentLangId = array_search(' selected', $getLangList[2]);
+        $getLanguage = $this->languages[$currentLangId];
+        $this->inputs['Lang'] = $language;
         $this->inputs['media0'] = $getTextarea[2];
         foreach ($getInputs[1] as $i) {
             preg_match_all('/name\="(.*?)"/', $i, $getInput);
