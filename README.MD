@@ -29,6 +29,7 @@ By installing this plugin you accept:
 ### 1.2
 *Release Date - 4 Aug 2019*
 
+* Fixed some errors
 * Language bug has been fixed. It was setting automatically "No Language" causing issues with promotions
 
 #### 1.1
