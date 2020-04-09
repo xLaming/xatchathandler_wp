@@ -5,7 +5,7 @@ class XAS_ChatHandler {
     private $html, $inputs, $headers, $languages;
     /* SETTINGS */
     const NOT_STAFF  = ['guest']; # You can use: mod, owner, main
-    const BLACK_LIST = [10101, 1510151, 23232323, 356566558]; # Black list, you can ignore bots or someone else
+    const BLACK_LIST = [10101, 1510151, 22332233, 23232323, 356566558]; # Black list, you can ignore bots or someone else
     const CACHE_TIME = 86400; # 24 hours in seconds
     const PHRASES    = [
         'Invalid password.',
@@ -25,6 +25,7 @@ class XAS_ChatHandler {
         'xs'   => 'https://xat.me/web_gear/chat/profile.php?id=%d',
         'edit' => 'https://xat.com/web_gear/chat.php?id=%d&pw=%d',
         'chat' => 'https://xat.com/web_gear/chat/editgroup.php?GroupName=%s',
+        'ed2t' => 'https://xat.com/web_gear/chat/editgroup2.php',
     ];
     /*-*-*-*-*-*/
 
@@ -33,6 +34,7 @@ class XAS_ChatHandler {
             $this->name = $name;
             $this->pass = $pass;
             $this->headers = [
+                'Origin'     => 'https://xat.com',
                 'Referer'    => sprintf(self::URL['chat'], $this->name),
                 'User-Agent' => 'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0',
             ];
@@ -73,14 +75,15 @@ class XAS_ChatHandler {
     }
 
     public function submit() {
+        $this->headers['content-type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
         $getSetup = wp_remote_post(
-            self::URL['chat'],
+            self::URL['ed2t'],
             [
                 "body"	  => $this->inputs,
                 "headers" => $this->headers,
             ]
         )['body'];
-        return $getSetup;
+        return substr(base64_decode($getSetup), 12);
     }
 
     public function getUsername(int $uid) {
